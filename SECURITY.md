@@ -2,23 +2,19 @@
 
 ## Scope
 
-This repository contains the smart contracts for the **Beryl / BerylPad** B20
-launchpad — a fork of [Clanker v4](https://github.com/clanker-devco/v4-contracts)
-in which the deployed token is Base's native **B20** precompile token (see
-[`README.md`](./README.md)). These contracts handle token deployment, Uniswap v4
-LP locking, fee collection, MEV protection at launch, and B20 policy
-authorization. Treat all of `src/` as in-scope.
+This repository contains the smart contracts for the **BerylPad** B20 launchpad —
+a fork of [Clanker v4](https://github.com/clanker-devco/v4-contracts) in which the
+deployed token is Base's native **B20** precompile token (see [`README.md`](./README.md)).
+These contracts handle token deployment, Uniswap v4 LP locking, fee collection,
+MEV protection at launch, and B20 policy authorization. Treat all of `src/` as
+in-scope.
 
 ## Reporting a Vulnerability
 
 **Do not open a public issue for security vulnerabilities.**
 
-Report privately via either channel:
-
-- **GitHub Private Vulnerability Reporting** — the *Report a vulnerability*
-  button under this repository's **Security** tab (preferred; enable it in repo
-  settings).
-- **Email** — `<SECURITY-CONTACT-EMAIL>` *(fill in before publishing)*.
+Report privately via **GitHub Private Vulnerability Reporting** — the *Report a
+vulnerability* button under this repository's **Security** tab.
 
 Please include:
 
@@ -41,10 +37,10 @@ identical to upstream Clanker v4, which carries the following audits (see
 - Macro v4 Audit, Round 2 — `audits/macro_v4_audit_2.pdf`
 
 The Beryl-specific changes — the `createB20` deployer rewire
-(`src/utils/ClankerDeployer.sol`) and the policy orchestrator
-(`src/periphery/B20PolicyOrchestrator.sol`) — are covered by Beryl's own
-contract security review. The B20 token itself is a chain-level precompile, not
-part of this repository.
+(`src/utils/BerylPadDeployer.sol`) and the policy orchestrator
+(`src/periphery/B20PolicyOrchestrator.sol`) — are covered by Beryl's own contract
+security review; a formal third-party audit is planned before mainnet. The B20
+token itself is a chain-level precompile, not part of this repository.
 
 ## Please Do Not
 
