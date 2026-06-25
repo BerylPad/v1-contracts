@@ -1,4 +1,4 @@
-# Beryl Launchpad Contracts
+# BerylPad Launchpad Contracts
 
 > **B20-precompile launchpad — a fork of [clanker-devco/v4-contracts](https://github.com/clanker-devco/v4-contracts)**
 > @ `b004c2edda29fa282a16d5d1441a26484f70b37f` (MIT). See [`LICENSE`](./LICENSE)
@@ -17,8 +17,8 @@ This is a fork of Clanker v4 whose one structural change is the **token**: inste
 of deploying a bespoke `ClankerToken` ERC-20, the factory creates Base's native
 **B20** via the `createB20` precompile. The entire downstream apparatus — the v4
 hook, LP locker, MEV modules, and the Vault / DevBuy / Airdrop / Presale
-extensions — is **unchanged**, because they touch the token only through standard
-ERC-20 selectors (`approve` / `transfer` / `transferFrom` / `balanceOf`).
+extensions — is **unchanged** in logic, because they touch the token only through
+standard ERC-20 selectors (`approve` / `transfer` / `transferFrom` / `balanceOf`).
 
 > **Status:** end-to-end proven on **Base Sepolia** (apparatus deployed; B20
 > launch + v4 pool + locked LP + buy/sell round-trip all live). Contract security
@@ -29,38 +29,38 @@ ERC-20 selectors (`approve` / `transfer` / `transferFrom` / `balanceOf`).
 ### Core
 | Contract | Description |
 |---|---|
-| `Clanker` | Token factory — orchestrates `deployToken` (B20 create → pool init → LP placement → MEV init → extensions). |
-| `utils/ClankerDeployer` | **Beryl rewire:** `createB20` + `batchMint` the full supply to the factory. The one file carrying real fork logic. |
-| `ClankerFeeLocker` | Escrow for LP fees with a per-depositor allowlist. |
+| `BerylPad` | Token factory — orchestrates `deployToken` (B20 create → pool init → LP placement → MEV init → extensions). |
+| `utils/BerylPadDeployer` | **Beryl rewire:** `createB20` + `batchMint` the full supply to the factory. The one file carrying real fork logic. |
+| `BerylPadFeeLocker` | Escrow for LP fees with a per-depositor allowlist. |
 | `utils/OwnerAdmins` | Owner + admin access control used across the apparatus. |
 
 ### Hooks (Uniswap v4)
 | Contract | Description |
 |---|---|
-| `hooks/ClankerHookV2` | Base hook — pool init, swap callbacks, LP-fee sweep, MEV coordination. |
-| `hooks/ClankerHookStaticFeeV2` | Static LP-fee strategy (apparatus default). |
-| `hooks/ClankerHookDynamicFeeV2` | Dynamic LP-fee strategy. |
-| `hooks/ClankerPoolExtensionAllowlist` | Per-pool extension allowlist. |
+| `hooks/BerylPadHookV2` | Base hook — pool init, swap callbacks, LP-fee sweep, MEV coordination. |
+| `hooks/BerylPadHookStaticFeeV2` | Static LP-fee strategy (apparatus default). |
+| `hooks/BerylPadHookDynamicFeeV2` | Dynamic LP-fee strategy. |
+| `hooks/BerylPadPoolExtensionAllowlist` | Per-pool extension allowlist. |
 
 ### LP Lockers
 | Contract | Description |
 |---|---|
-| `lp-lockers/ClankerLpLockerMultiple` | Locks LP, multi-recipient reward distribution (apparatus default). |
-| `lp-lockers/ClankerLpLockerFeeConversion` | Fee-conversion locker variant. |
+| `lp-lockers/BerylPadLpLockerMultiple` | Locks LP, multi-recipient reward distribution (apparatus default). |
+| `lp-lockers/BerylPadLpLockerFeeConversion` | Fee-conversion locker variant. |
 
 ### Extensions (optional, per launch)
 | Contract | Description |
 |---|---|
-| `extensions/ClankerVault` | Lock/vest a bps of supply for later release. |
-| `extensions/ClankerAirdrop` · `ClankerAirdropV2` | Merkle-based airdrop. |
-| `extensions/ClankerUniv4EthDevBuy` · `ClankerUniv3EthDevBuy` | Dev-buy from the pool at launch. |
-| `extensions/ClankerPresaleAllowlist` · `ClankerPresaleEthToCreator` | Allowlist / ETH-to-creator presale. |
+| `extensions/BerylPadVault` | Lock/vest a bps of supply for later release. |
+| `extensions/BerylPadAirdrop` · `BerylPadAirdropV2` | Merkle-based airdrop. |
+| `extensions/BerylPadUniv4EthDevBuy` · `BerylPadUniv3EthDevBuy` | Dev-buy from the pool at launch. |
+| `extensions/BerylPadPresaleAllowlist` · `BerylPadPresaleEthToCreator` | Allowlist / ETH-to-creator presale. |
 
 ### MEV Modules
 | Contract | Description |
 |---|---|
-| `mev-modules/ClankerMevBlockDelay` | Block-delay sniper protection (apparatus default). |
-| `mev-modules/ClankerMevTimeDelay` · `ClankerMevDescendingFees` · `ClankerSniperAuctionV0/V2` | Alternative MEV strategies. |
+| `mev-modules/BerylPadMevBlockDelay` | Block-delay sniper protection (apparatus default). |
+| `mev-modules/BerylPadMevTimeDelay` · `BerylPadMevDescendingFees` · `BerylPadSniperAuctionV0/V2` | Alternative MEV strategies. |
 
 ### Beryl periphery (new — not vendored from Clanker)
 | Contract | Description |
@@ -72,14 +72,18 @@ ERC-20 selectors (`approve` / `transfer` / `transferFrom` / `balanceOf`).
 Apparatus deployed by [`script/DeployApparatus.s.sol`](./script/DeployApparatus.s.sol).
 **Mainnet (8453): not yet deployed.**
 
+> These Sepolia instances were deployed **before** the `Clanker*` → `BerylPad*`
+> rename; the addresses are unchanged and functionally identical. Mainnet will be
+> deployed under the `BerylPad*` names.
+
 | Contract | Address |
 |---|---|
-| Clanker (factory) | [`0xdb9457dad0d0691a56777a036e2d2b3d830d3da3`](https://sepolia.basescan.org/address/0xdb9457dad0d0691a56777a036e2d2b3d830d3da3) |
-| ClankerHookStaticFeeV2 | [`0x2DCfcA9529A498B3bc2A13784EB4989365E768cc`](https://sepolia.basescan.org/address/0x2DCfcA9529A498B3bc2A13784EB4989365E768cc) |
-| ClankerLpLockerMultiple | [`0x90e580477a14be33344bab802b5f73d3ec501cbf`](https://sepolia.basescan.org/address/0x90e580477a14be33344bab802b5f73d3ec501cbf) |
-| ClankerFeeLocker | [`0x9b5209c45393d73ad97a6c6c168d6ebad1dd959f`](https://sepolia.basescan.org/address/0x9b5209c45393d73ad97a6c6c168d6ebad1dd959f) |
-| ClankerPoolExtensionAllowlist | [`0xeb29a9fa3fe29317e2a658567855cbc34c6ed312`](https://sepolia.basescan.org/address/0xeb29a9fa3fe29317e2a658567855cbc34c6ed312) |
-| ClankerMevBlockDelay | [`0xE60C0a4B23ebe39f4629f8db7e1536fE91d4D80e`](https://sepolia.basescan.org/address/0xE60C0a4B23ebe39f4629f8db7e1536fE91d4D80e) |
+| BerylPad (factory) | [`0xdb9457dad0d0691a56777a036e2d2b3d830d3da3`](https://sepolia.basescan.org/address/0xdb9457dad0d0691a56777a036e2d2b3d830d3da3) |
+| BerylPadHookStaticFeeV2 | [`0x2DCfcA9529A498B3bc2A13784EB4989365E768cc`](https://sepolia.basescan.org/address/0x2DCfcA9529A498B3bc2A13784EB4989365E768cc) |
+| BerylPadLpLockerMultiple | [`0x90e580477a14be33344bab802b5f73d3ec501cbf`](https://sepolia.basescan.org/address/0x90e580477a14be33344bab802b5f73d3ec501cbf) |
+| BerylPadFeeLocker | [`0x9b5209c45393d73ad97a6c6c168d6ebad1dd959f`](https://sepolia.basescan.org/address/0x9b5209c45393d73ad97a6c6c168d6ebad1dd959f) |
+| BerylPadPoolExtensionAllowlist | [`0xeb29a9fa3fe29317e2a658567855cbc34c6ed312`](https://sepolia.basescan.org/address/0xeb29a9fa3fe29317e2a658567855cbc34c6ed312) |
+| BerylPadMevBlockDelay | [`0xE60C0a4B23ebe39f4629f8db7e1536fE91d4D80e`](https://sepolia.basescan.org/address/0xE60C0a4B23ebe39f4629f8db7e1536fE91d4D80e) |
 | B20PolicyOrchestrator | [`0x235fbe21115ad5991ffc6412156913aa4f661ccb`](https://sepolia.basescan.org/address/0x235fbe21115ad5991ffc6412156913aa4f661ccb) |
 
 *Example launched token:* [`0xb200…0cd713`](https://sepolia.basescan.org/token/0xb200000000000000000000fbc76c40195c0cd713) (a vanilla B20 with a live v4 pool).
@@ -97,18 +101,18 @@ Apparatus deployed by [`script/DeployApparatus.s.sol`](./script/DeployApparatus.
 
 | File | Change |
 |---|---|
-| `src/utils/ClankerDeployer.sol` | **Rewired:** `new ClankerToken{salt}(…)` → `StdPrecompiles.B20_FACTORY.createB20(ASSET, salt, encodeAssetCreateParams(…), initCalls)` where `initCalls` `batchMint`s the full supply to the factory (delegatecall context). Originating-chain mint gate preserved. |
-| `src/ClankerToken.sol` | **Deleted** — B20 is a precompile, not deployable EVM bytecode. |
+| `src/utils/BerylPadDeployer.sol` | **Rewired:** `new ClankerToken{salt}(…)` → `StdPrecompiles.B20_FACTORY.createB20(ASSET, salt, encodeAssetCreateParams(…), initCalls)` where `initCalls` `batchMint`s the full supply to the factory (delegatecall context). Originating-chain mint gate preserved. |
+| `src/ClankerToken.sol` | **Deleted** — the upstream Clanker token; B20 is a precompile, not deployable EVM bytecode. |
 | `src/periphery/B20PolicyOrchestrator.sol` | **New** (Beryl) — B20 policy-compliance orchestration. |
-| `src/hooks/ClankerHook.sol`, `ClankerHookV2.sol` | Removed the **dead** `import {ClankerToken}` (never referenced; blocked the B20-only build). |
+| `src/hooks/BerylPadHook.sol`, `BerylPadHookV2.sol` | Removed the **dead** `import {ClankerToken}` (never referenced; blocked the B20-only build). |
 | `foundry.toml` | `base = true` (registers the B20 / Policy / Activation precompiles in `base-forge`). |
 | `remappings.txt` | Added `base-std/`; removed `@contracts-bedrock/` (Optimism — only the removed `ClankerToken` used it for `IERC7802` / Superchain crosschain). |
 
-**Dropped capabilities** (lived on `ClankerToken`, no B20 analog): on-chain
-image/metadata/context (Beryl indexes these off-chain), `verify()`/`isVerified()`,
-ERC20Votes, ERC20Permit, ERC20Burnable, and the IERC7802 Superchain cross-chain
-mint/burn. The B20 **gains** native policy-state (allow/block/frozen, pause,
-supply-cap, rebase, memo).
+**Dropped capabilities** (lived on the upstream `ClankerToken`, no B20 analog):
+on-chain image/metadata/context (Beryl indexes these off-chain),
+`verify()`/`isVerified()`, ERC20Votes, ERC20Permit, ERC20Burnable, and the
+IERC7802 Superchain cross-chain mint/burn. The B20 **gains** native policy-state
+(allow/block/frozen, pause, supply-cap, rebase, memo).
 
 ## Build & test
 
@@ -123,7 +127,7 @@ PATH="$BASEFORGE:$PATH" base-forge build
 PATH="$BASEFORGE:$PATH" base-forge test          # fork tests need --fork-url <base-sepolia>
 ```
 
-The full Uniswap v4 + Clanker tree compiles clean against the B20 precompile
+The full Uniswap v4 + apparatus tree compiles clean against the B20 precompile
 (only upstream forge-lint typecast warnings remain). Compiler: Solidity 0.8.28,
 viaIR, optimizer 20,000 runs, EVM target Cancun.
 
@@ -145,12 +149,12 @@ Forked from [Clanker v4](https://github.com/clanker-devco/v4-contracts) by Clank
 Devco, licensed under MIT (per-file SPDX headers preserved). See [`LICENSE`](./LICENSE)
 for the dual copyright notice.
 
-**On naming:** the `Clanker*` contract names are kept **intentionally** (unlike
-some forks that rebrand). Keeping them preserves a clean, auditable diff against
-upstream (the repo is a GitHub fork — see the "ahead of upstream" view), keeps the
-Clanker audit lineage legible, and lets upstream security fixes be merged. The
-Beryl-specific code is `B20PolicyOrchestrator` plus the `ClankerDeployer` B20
-rewire; everything else is vendored Clanker.
+**On naming:** the vendored `Clanker*` contracts are renamed to `BerylPad*` for
+brand consistency. The reference ABIs under [`base_mainnet_abis/`](./base_mainnet_abis)
+keep their original `Clanker*` names — they document Clanker's **live mainnet**
+contracts and are not ours. The genuinely Beryl-specific code is
+`B20PolicyOrchestrator` and the `BerylPadDeployer` B20 rewire; everything else is
+vendored Clanker v4 logic under a renamed identifier.
 
 ## License
 

@@ -7,8 +7,8 @@ import {LaunchSwapHarness} from "../policy/LaunchSwapHarness.sol";
 
 /// LP6 AUDIT PoC — confirmed finding "Policy-Denial DoS on swap fee collection".
 ///
-/// On every swap, ClankerHookV2._beforeSwap unconditionally claims LP fees
-/// (collectRewardsWithoutUnlock -> ClankerFeeLocker.storeFees), which does a B20
+/// On every swap, BerylPadHookV2._beforeSwap unconditionally claims LP fees
+/// (collectRewardsWithoutUnlock -> BerylPadFeeLocker.storeFees), which does a B20
 /// transferFrom(LP locker -> fee locker). With an ALLOWLIST policy bound to the
 /// transfer scopes, if the LP locker / fee locker / reward recipient are NOT
 /// allowlisted, that transfer reverts PolicyForbids and — with no try-catch —

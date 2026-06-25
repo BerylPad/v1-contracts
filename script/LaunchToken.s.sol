@@ -2,10 +2,10 @@
 pragma solidity ^0.8.28;
 
 import {Script, console} from "forge-std/Script.sol";
-import {Clanker} from "../src/Clanker.sol";
-import {IClanker} from "../src/interfaces/IClanker.sol";
-import {IClankerHookStaticFee} from "../src/hooks/interfaces/IClankerHookStaticFee.sol";
-import {IClankerHookV2} from "../src/hooks/interfaces/IClankerHookV2.sol";
+import {BerylPad} from "../src/BerylPad.sol";
+import {IBerylPad} from "../src/interfaces/IBerylPad.sol";
+import {IBerylPadHookStaticFee} from "../src/hooks/interfaces/IBerylPadHookStaticFee.sol";
+import {IBerylPadHookV2} from "../src/hooks/interfaces/IBerylPadHookV2.sol";
 
 /// Launch one B20 through the deployed apparatus factory: `deployToken` runs
 /// createB20 (full 100b supply to the factory) + v4 pool init + LP placement, in
@@ -19,7 +19,7 @@ import {IClankerHookV2} from "../src/hooks/interfaces/IClankerHookV2.sol";
 /// Mirrors the e2e harness `_baseCfg` exactly (single full-reward position to the
 /// launcher, WETH-paired, static 1% fees, START_TICK -230400 / spacing 200).
 contract LaunchToken is Script {
-    int24 constant START_TICK = -230400; // tickIfToken0IsClanker (multiple of spacing)
+    int24 constant START_TICK = -230400; // tickIfToken0IsBerylPad (multiple of spacing)
     int24 constant TICK_UPPER = 887200;
     int24 constant SPACING = 200;
 
@@ -49,13 +49,13 @@ contract LaunchToken is Script {
         pbps[0] = 10000;
 
         bytes memory feeData =
-            abi.encode(IClankerHookStaticFee.PoolStaticConfigVars({clankerFee: 10000, pairedFee: 10000}));
+            abi.encode(IBerylPadHookStaticFee.PoolStaticConfigVars({berylPadFee: 10000, pairedFee: 10000}));
         bytes memory poolData = abi.encode(
-            IClankerHookV2.PoolInitializationData({extension: address(0), extensionData: "", feeData: feeData})
+            IBerylPadHookV2.PoolInitializationData({extension: address(0), extensionData: "", feeData: feeData})
         );
 
-        IClanker.DeploymentConfig memory cfg = IClanker.DeploymentConfig({
-            tokenConfig: IClanker.TokenConfig({
+        IBerylPad.DeploymentConfig memory cfg = IBerylPad.DeploymentConfig({
+            tokenConfig: IBerylPad.TokenConfig({
                 tokenAdmin: admin,
                 name: name,
                 symbol: symbol,
@@ -65,14 +65,14 @@ contract LaunchToken is Script {
                 context: "",
                 originatingChainId: block.chainid
             }),
-            poolConfig: IClanker.PoolConfig({
+            poolConfig: IBerylPad.PoolConfig({
                 hook: hook,
                 pairedToken: weth,
-                tickIfToken0IsClanker: START_TICK,
+                tickIfToken0IsBerylPad: START_TICK,
                 tickSpacing: SPACING,
                 poolData: poolData
             }),
-            lockerConfig: IClanker.LockerConfig({
+            lockerConfig: IBerylPad.LockerConfig({
                 locker: locker,
                 rewardAdmins: admins,
                 rewardRecipients: recips,
@@ -82,11 +82,11 @@ contract LaunchToken is Script {
                 positionBps: pbps,
                 lockerData: ""
             }),
-            mevModuleConfig: IClanker.MevModuleConfig({mevModule: mev, mevModuleData: ""}),
-            extensionConfigs: new IClanker.ExtensionConfig[](0)
+            mevModuleConfig: IBerylPad.MevModuleConfig({mevModule: mev, mevModuleData: ""}),
+            extensionConfigs: new IBerylPad.ExtensionConfig[](0)
         });
 
-        address token = Clanker(factory).deployToken(cfg);
+        address token = BerylPad(factory).deployToken(cfg);
         vm.stopBroadcast();
 
         console.log("== B20 launched ==");

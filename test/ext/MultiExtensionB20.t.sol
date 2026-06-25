@@ -3,14 +3,14 @@ pragma solidity ^0.8.28;
 
 import {StdPrecompiles} from "base-std/StdPrecompiles.sol";
 import {Hashes} from "@openzeppelin/contracts/utils/cryptography/Hashes.sol";
-import {IClanker} from "../../src/interfaces/IClanker.sol";
-import {ClankerVault} from "../../src/extensions/ClankerVault.sol";
-import {IClankerVault} from "../../src/extensions/interfaces/IClankerVault.sol";
-import {ClankerAirdrop} from "../../src/extensions/ClankerAirdrop.sol";
-import {IClankerAirdrop} from "../../src/extensions/interfaces/IClankerAirdrop.sol";
-import {ClankerUniv4EthDevBuy} from "../../src/extensions/ClankerUniv4EthDevBuy.sol";
-import {IClankerUniv4EthDevBuy} from "../../src/extensions/interfaces/IClankerUniv4EthDevBuy.sol";
-import {ClankerB20Harness} from "./Helpers.sol";
+import {IBerylPad} from "../../src/interfaces/IBerylPad.sol";
+import {BerylPadVault} from "../../src/extensions/BerylPadVault.sol";
+import {IBerylPadVault} from "../../src/extensions/interfaces/IBerylPadVault.sol";
+import {BerylPadAirdrop} from "../../src/extensions/BerylPadAirdrop.sol";
+import {IBerylPadAirdrop} from "../../src/extensions/interfaces/IBerylPadAirdrop.sol";
+import {BerylPadUniv4EthDevBuy} from "../../src/extensions/BerylPadUniv4EthDevBuy.sol";
+import {IBerylPadUniv4EthDevBuy} from "../../src/extensions/interfaces/IBerylPadUniv4EthDevBuy.sol";
+import {BerylPadB20Harness} from "./Helpers.sol";
 
 interface IERC20Min {
     function balanceOf(address) external view returns (uint256);
@@ -23,7 +23,7 @@ interface IERC20Min {
 /// remaining 70b, and the DevBuy buys out of that 70b with ETH. The full
 /// minted 100b is conserved across every sink (no leak, no double-count).
 /// Base Sepolia fork.
-contract MultiExtensionB20Test is ClankerB20Harness {
+contract MultiExtensionB20Test is BerylPadB20Harness {
     address constant VAULT_ADMIN = address(0xBEEF);
     address constant ALICE = address(0xA11CE0);
     address constant DEVBUY_RECIPIENT = address(0xD00D);
@@ -44,10 +44,10 @@ contract MultiExtensionB20Test is ClankerB20Harness {
         require(UNIVERSAL_ROUTER.code.length > 0, "UniversalRouter absent on fork");
 
         Apparatus memory a = _deployApparatus();
-        ClankerVault vault = new ClankerVault(address(a.factory));
-        ClankerAirdrop airdrop = new ClankerAirdrop(address(a.factory));
-        ClankerUniv4EthDevBuy devBuy =
-            new ClankerUniv4EthDevBuy(address(a.factory), WETH, UNIVERSAL_ROUTER, PERMIT2);
+        BerylPadVault vault = new BerylPadVault(address(a.factory));
+        BerylPadAirdrop airdrop = new BerylPadAirdrop(address(a.factory));
+        BerylPadUniv4EthDevBuy devBuy =
+            new BerylPadUniv4EthDevBuy(address(a.factory), WETH, UNIVERSAL_ROUTER, PERMIT2);
 
         vm.startPrank(OWNER);
         a.factory.setExtension(address(vault), true);
@@ -59,26 +59,26 @@ contract MultiExtensionB20Test is ClankerB20Harness {
         bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(ALICE, uint256(1_000 ether)))));
         bytes32 root = Hashes.commutativeKeccak256(leaf, leaf);
 
-        IClanker.ExtensionConfig[] memory ext = new IClanker.ExtensionConfig[](3);
-        ext[0] = IClanker.ExtensionConfig({
+        IBerylPad.ExtensionConfig[] memory ext = new IBerylPad.ExtensionConfig[](3);
+        ext[0] = IBerylPad.ExtensionConfig({
             extension: address(vault),
             msgValue: 0,
             extensionBps: VAULT_BPS,
             extensionData: abi.encode(
-                IClankerVault.VaultExtensionData({admin: VAULT_ADMIN, lockupDuration: 7 days, vestingDuration: 0})
+                IBerylPadVault.VaultExtensionData({admin: VAULT_ADMIN, lockupDuration: 7 days, vestingDuration: 0})
             )
         });
-        ext[1] = IClanker.ExtensionConfig({
+        ext[1] = IBerylPad.ExtensionConfig({
             extension: address(airdrop),
             msgValue: 0,
             extensionBps: AIRDROP_BPS,
             extensionData: abi.encode(
-                IClankerAirdrop.AirdropExtensionData({merkleRoot: root, lockupDuration: 1 days, vestingDuration: 0})
+                IBerylPadAirdrop.AirdropExtensionData({merkleRoot: root, lockupDuration: 1 days, vestingDuration: 0})
             )
         });
-        IClankerUniv4EthDevBuy.Univ4EthDevBuyExtensionData memory dbData;
+        IBerylPadUniv4EthDevBuy.Univ4EthDevBuyExtensionData memory dbData;
         dbData.recipient = DEVBUY_RECIPIENT;
-        ext[2] = IClanker.ExtensionConfig({
+        ext[2] = IBerylPad.ExtensionConfig({
             extension: address(devBuy),
             msgValue: DEV_BUY_ETH,
             extensionBps: 0,

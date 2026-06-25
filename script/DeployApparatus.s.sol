@@ -2,19 +2,19 @@
 pragma solidity ^0.8.28;
 
 import {Script, console} from "forge-std/Script.sol";
-import {Clanker} from "../src/Clanker.sol";
-import {ClankerFeeLocker} from "../src/ClankerFeeLocker.sol";
-import {ClankerHookStaticFeeV2} from "../src/hooks/ClankerHookStaticFeeV2.sol";
-import {ClankerPoolExtensionAllowlist} from "../src/hooks/ClankerPoolExtensionAllowlist.sol";
-import {ClankerMevBlockDelay} from "../src/mev-modules/ClankerMevBlockDelay.sol";
-import {ClankerLpLockerMultiple} from "../src/lp-lockers/ClankerLpLockerMultiple.sol";
+import {BerylPad} from "../src/BerylPad.sol";
+import {BerylPadFeeLocker} from "../src/BerylPadFeeLocker.sol";
+import {BerylPadHookStaticFeeV2} from "../src/hooks/BerylPadHookStaticFeeV2.sol";
+import {BerylPadPoolExtensionAllowlist} from "../src/hooks/BerylPadPoolExtensionAllowlist.sol";
+import {BerylPadMevBlockDelay} from "../src/mev-modules/BerylPadMevBlockDelay.sol";
+import {BerylPadLpLockerMultiple} from "../src/lp-lockers/BerylPadLpLockerMultiple.sol";
 import {B20PolicyOrchestrator} from "../src/periphery/B20PolicyOrchestrator.sol";
 import {HookMiner} from "v4-periphery/src/utils/HookMiner.sol";
 import {Hooks} from "@uniswap/v4-core/src/libraries/Hooks.sol";
 
 /// LP5a: stand up the Beryl launchpad apparatus (the shared, one-time platform
 /// infrastructure the FE launch form points at) on a live chain. Deploys the
-/// Clanker factory + a CREATE2-mined v4 hook + LP locker + MEV module + fee
+/// BerylPad factory + a CREATE2-mined v4 hook + LP locker + MEV module + fee
 /// locker + the Beryl policy orchestrator, wires them, and registers the locker
 /// as a fee depositor. Logs every address for the FE `.env`.
 ///
@@ -48,21 +48,21 @@ contract DeployApparatus is Script {
         vm.startBroadcast();
         address owner = msg.sender; // the broadcasting deployer owns the apparatus
 
-        Clanker factory = new Clanker(owner);
-        ClankerFeeLocker feeLocker = new ClankerFeeLocker(owner);
+        BerylPad factory = new BerylPad(owner);
+        BerylPadFeeLocker feeLocker = new BerylPadFeeLocker(owner);
 
         // mine + deploy the v4 hook (address low bits must equal the permission bitmap)
-        ClankerPoolExtensionAllowlist allowlist = new ClankerPoolExtensionAllowlist(owner);
+        BerylPadPoolExtensionAllowlist allowlist = new BerylPadPoolExtensionAllowlist(owner);
         bytes memory hookArgs = abi.encode(poolManager, address(factory), address(allowlist), weth);
         (address predicted, bytes32 salt) =
-            HookMiner.find(CREATE2_DEPLOYER, HOOK_FLAGS, type(ClankerHookStaticFeeV2).creationCode, hookArgs);
-        ClankerHookStaticFeeV2 hook =
-            new ClankerHookStaticFeeV2{salt: salt}(poolManager, address(factory), address(allowlist), weth);
+            HookMiner.find(CREATE2_DEPLOYER, HOOK_FLAGS, type(BerylPadHookStaticFeeV2).creationCode, hookArgs);
+        BerylPadHookStaticFeeV2 hook =
+            new BerylPadHookStaticFeeV2{salt: salt}(poolManager, address(factory), address(allowlist), weth);
         require(address(hook) == predicted, "hook address mismatch");
 
-        ClankerMevBlockDelay mev = new ClankerMevBlockDelay(2);
-        ClankerLpLockerMultiple locker =
-            new ClankerLpLockerMultiple(owner, address(factory), address(feeLocker), positionManager, permit2);
+        BerylPadMevBlockDelay mev = new BerylPadMevBlockDelay(2);
+        BerylPadLpLockerMultiple locker =
+            new BerylPadLpLockerMultiple(owner, address(factory), address(feeLocker), positionManager, permit2);
 
         // fee-path infra the orchestrator folds into every compliant allowlist so a
         // pool can never brick on the hook's unconditional fee sweep (LP6 FIND-001)

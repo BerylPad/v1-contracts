@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {ClankerB20Harness} from "./Helpers.sol";
+import {BerylPadB20Harness} from "./Helpers.sol";
 
 /// LP3b feasibility gate: the Univ4 ETH DevBuy extension swaps through the
 /// UniversalRouter, so the forked Base Sepolia state must carry its bytecode
 /// (Permit2 is canonical). This probe records the on-chain fact that drives the
 /// LP3b path decision (full e2e vs. mock). Skips cleanly without --fork-url.
-contract DevBuyProbeTest is ClankerB20Harness {
+contract DevBuyProbeTest is BerylPadB20Harness {
     function test_universalRouter_present_on_fork() public {
         if (!_v4Present()) {
             vm.skip(true);

@@ -3,7 +3,7 @@
 # committed; this re-fetches it at the exact versions upstream Clanker pins (minus
 # the Optimism monorepo, which only the removed ClankerToken needed), plus base-std.
 #
-# Run from contracts/clanker-fork/:  ./setup.sh
+# Run from contracts/berylpad/:  ./setup.sh
 set -euo pipefail
 cd "$(dirname "$0")"
 

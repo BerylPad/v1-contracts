@@ -3,8 +3,8 @@ pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {StdPrecompiles} from "base-std/StdPrecompiles.sol";
-import {ClankerDeployer} from "../src/utils/ClankerDeployer.sol";
-import {IClanker} from "../src/interfaces/IClanker.sol";
+import {BerylPadDeployer} from "../src/utils/BerylPadDeployer.sol";
+import {IBerylPad} from "../src/interfaces/IBerylPad.sol";
 
 interface IERC20Min {
     function balanceOf(address) external view returns (uint256);
@@ -16,13 +16,13 @@ interface IERC20Min {
     function decimals() external view returns (uint8);
 }
 
-/// Harness mimicking Clanker.sol's call into the library: an external library call
-/// is a DELEGATECALL, so ClankerDeployer.deployToken runs in THIS contract's context
+/// Harness mimicking BerylPad.sol's call into the library: an external library call
+/// is a DELEGATECALL, so BerylPadDeployer.deployToken runs in THIS contract's context
 /// (this == the "factory"), and the B20 mint lands here.
 contract DeployHarness {
     address public token;
-    function run(IClanker.TokenConfig memory cfg, uint256 supply) external returns (address) {
-        token = ClankerDeployer.deployToken(cfg, supply);
+    function run(IBerylPad.TokenConfig memory cfg, uint256 supply) external returns (address) {
+        token = BerylPadDeployer.deployToken(cfg, supply);
         return token;
     }
     function pull(address t, address to, uint256 amt) external {
@@ -30,15 +30,15 @@ contract DeployHarness {
     }
 }
 
-/// LP2c: validates the REAL committed forked ClankerDeployer (not the LP2a mock).
+/// LP2c: validates the REAL committed forked BerylPadDeployer (not the LP2a mock).
 contract ForkedDeployerTest is Test {
     uint256 constant SUPPLY = 100_000_000_000 ether; // Clanker's TOKEN_SUPPLY
     address constant ADMIN = address(0xA11CE);
 
-    function _cfg() internal view returns (IClanker.TokenConfig memory) {
-        return IClanker.TokenConfig({
+    function _cfg() internal view returns (IBerylPad.TokenConfig memory) {
+        return IBerylPad.TokenConfig({
             tokenAdmin: ADMIN,
-            name: "Forked Clanker B20",
+            name: "Forked BerylPad B20",
             symbol: "FCB20",
             salt: bytes32(uint256(0xBEEF)),
             image: "",
@@ -64,7 +64,7 @@ contract ForkedDeployerTest is Test {
 
     function test_realDeployer_nonOriginatingChain_zeroSupply() public {
         DeployHarness h = new DeployHarness();
-        IClanker.TokenConfig memory cfg = _cfg();
+        IBerylPad.TokenConfig memory cfg = _cfg();
         cfg.originatingChainId = block.chainid + 1; // not the originating chain
         address token = h.run(cfg, SUPPLY);
         assertTrue(StdPrecompiles.B20_FACTORY.isB20(token), "B20 still created");

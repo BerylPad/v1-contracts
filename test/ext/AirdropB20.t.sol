@@ -3,24 +3,24 @@ pragma solidity ^0.8.28;
 
 import {StdPrecompiles} from "base-std/StdPrecompiles.sol";
 import {Hashes} from "@openzeppelin/contracts/utils/cryptography/Hashes.sol";
-import {IClanker} from "../../src/interfaces/IClanker.sol";
-import {ClankerAirdrop} from "../../src/extensions/ClankerAirdrop.sol";
-import {IClankerAirdrop} from "../../src/extensions/interfaces/IClankerAirdrop.sol";
-import {ClankerB20Harness} from "./Helpers.sol";
+import {IBerylPad} from "../../src/interfaces/IBerylPad.sol";
+import {BerylPadAirdrop} from "../../src/extensions/BerylPadAirdrop.sol";
+import {IBerylPadAirdrop} from "../../src/extensions/interfaces/IBerylPadAirdrop.sol";
+import {BerylPadB20Harness} from "./Helpers.sol";
 
 interface IERC20Min {
     function balanceOf(address) external view returns (uint256);
     function totalSupply() external view returns (uint256);
 }
 
-/// LP3a: prove the ClankerAirdrop extension works with a B20 token end-to-end.
+/// LP3a: prove the BerylPadAirdrop extension works with a B20 token end-to-end.
 /// deployToken with a 10% airdrop earmark → the factory mints 100b B20, pulls
 /// 10b into the airdrop (transferFrom) and places 90b in the v4 pool; a
 /// Merkle-gated claim then releases an allocation to a recipient after the
 /// lockup. Also proves the security invariant: a bad proof reverts. The Merkle
 /// tree uses OZ's standard double-hashed leaf + commutative pair hashing, the
-/// exact scheme ClankerAirdrop.claim verifies. Base Sepolia fork.
-contract AirdropB20Test is ClankerB20Harness {
+/// exact scheme BerylPadAirdrop.claim verifies. Base Sepolia fork.
+contract AirdropB20Test is BerylPadB20Harness {
     address constant ALICE = address(0xA11CE0);
     address constant BOB = address(0xB0B0);
     uint256 constant ALICE_ALLOC = 1_000 ether;
@@ -43,18 +43,18 @@ contract AirdropB20Test is ClankerB20Harness {
         merkleRoot = Hashes.commutativeKeccak256(leafAlice, leafBob);
     }
 
-    function _airdropExtension(ClankerAirdrop airdrop)
+    function _airdropExtension(BerylPadAirdrop airdrop)
         internal
         view
-        returns (IClanker.ExtensionConfig[] memory ext)
+        returns (IBerylPad.ExtensionConfig[] memory ext)
     {
-        ext = new IClanker.ExtensionConfig[](1);
-        ext[0] = IClanker.ExtensionConfig({
+        ext = new IBerylPad.ExtensionConfig[](1);
+        ext[0] = IBerylPad.ExtensionConfig({
             extension: address(airdrop),
             msgValue: 0,
             extensionBps: AIRDROP_BPS,
             extensionData: abi.encode(
-                IClankerAirdrop.AirdropExtensionData({
+                IBerylPadAirdrop.AirdropExtensionData({
                     merkleRoot: merkleRoot,
                     lockupDuration: 1 days,
                     vestingDuration: 0
@@ -63,10 +63,10 @@ contract AirdropB20Test is ClankerB20Harness {
         });
     }
 
-    function _deployWithAirdrop() internal returns (address token, ClankerAirdrop airdrop) {
+    function _deployWithAirdrop() internal returns (address token, BerylPadAirdrop airdrop) {
         _buildTree();
         Apparatus memory a = _deployApparatus();
-        airdrop = new ClankerAirdrop(address(a.factory));
+        airdrop = new BerylPadAirdrop(address(a.factory));
 
         vm.prank(OWNER);
         a.factory.setExtension(address(airdrop), true);
@@ -80,7 +80,7 @@ contract AirdropB20Test is ClankerB20Harness {
             vm.skip(true);
             return;
         }
-        (address token, ClankerAirdrop airdrop) = _deployWithAirdrop();
+        (address token, BerylPadAirdrop airdrop) = _deployWithAirdrop();
 
         // --- supply split ---
         assertTrue(StdPrecompiles.B20_FACTORY.isB20(token), "is B20");
@@ -105,13 +105,13 @@ contract AirdropB20Test is ClankerB20Harness {
             vm.skip(true);
             return;
         }
-        (address token, ClankerAirdrop airdrop) = _deployWithAirdrop();
+        (address token, BerylPadAirdrop airdrop) = _deployWithAirdrop();
 
         vm.warp(block.timestamp + 1 days + 1);
         bytes32[] memory badProof = new bytes32[](1);
         badProof[0] = bytes32(uint256(0xdead));
 
-        vm.expectRevert(IClankerAirdrop.InvalidProof.selector);
+        vm.expectRevert(IBerylPadAirdrop.InvalidProof.selector);
         airdrop.claim(token, ALICE, ALICE_ALLOC, badProof);
     }
 }

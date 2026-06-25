@@ -2,43 +2,43 @@
 pragma solidity ^0.8.28;
 
 import {StdPrecompiles} from "base-std/StdPrecompiles.sol";
-import {IClanker} from "../../src/interfaces/IClanker.sol";
-import {ClankerVault} from "../../src/extensions/ClankerVault.sol";
-import {IClankerVault} from "../../src/extensions/interfaces/IClankerVault.sol";
-import {ClankerB20Harness} from "./Helpers.sol";
+import {IBerylPad} from "../../src/interfaces/IBerylPad.sol";
+import {BerylPadVault} from "../../src/extensions/BerylPadVault.sol";
+import {IBerylPadVault} from "../../src/extensions/interfaces/IBerylPadVault.sol";
+import {BerylPadB20Harness} from "./Helpers.sol";
 
 interface IERC20Min {
     function balanceOf(address) external view returns (uint256);
     function totalSupply() external view returns (uint256);
 }
 
-/// LP3a: prove the ClankerVault extension works with a B20 token end-to-end.
+/// LP3a: prove the BerylPadVault extension works with a B20 token end-to-end.
 /// deployToken with a 20% vault earmark → the factory mints 100b B20, splits
 /// 20b to the vault (pulled via transferFrom) and 80b into the v4 pool, then
 /// after the lockup the vault releases the full 20b to its admin. Also proves
 /// the lockup state-machine: claim before unlock reverts. Base Sepolia fork.
-contract VaultB20Test is ClankerB20Harness {
+contract VaultB20Test is BerylPadB20Harness {
     address constant VAULT_ADMIN = address(0xBEEF);
 
     uint16 constant VAULT_BPS = 2000; // 20%
     uint256 constant VAULT_SUPPLY = TOKEN_SUPPLY * VAULT_BPS / 10_000; // 20b
     uint256 constant POOL_SUPPLY = TOKEN_SUPPLY - VAULT_SUPPLY; // 80b
 
-    function _vaultExtension(ClankerVault vault) internal pure returns (IClanker.ExtensionConfig[] memory ext) {
-        ext = new IClanker.ExtensionConfig[](1);
-        ext[0] = IClanker.ExtensionConfig({
+    function _vaultExtension(BerylPadVault vault) internal pure returns (IBerylPad.ExtensionConfig[] memory ext) {
+        ext = new IBerylPad.ExtensionConfig[](1);
+        ext[0] = IBerylPad.ExtensionConfig({
             extension: address(vault),
             msgValue: 0,
             extensionBps: VAULT_BPS,
             extensionData: abi.encode(
-                IClankerVault.VaultExtensionData({admin: VAULT_ADMIN, lockupDuration: 7 days, vestingDuration: 0})
+                IBerylPadVault.VaultExtensionData({admin: VAULT_ADMIN, lockupDuration: 7 days, vestingDuration: 0})
             )
         });
     }
 
-    function _deployWithVault() internal returns (address token, ClankerVault vault) {
+    function _deployWithVault() internal returns (address token, BerylPadVault vault) {
         Apparatus memory a = _deployApparatus();
-        vault = new ClankerVault(address(a.factory));
+        vault = new BerylPadVault(address(a.factory));
 
         vm.prank(OWNER);
         a.factory.setExtension(address(vault), true);
@@ -53,7 +53,7 @@ contract VaultB20Test is ClankerB20Harness {
             vm.skip(true);
             return;
         }
-        (address token, ClankerVault vault) = _deployWithVault();
+        (address token, BerylPadVault vault) = _deployWithVault();
 
         // --- supply split ---
         assertTrue(StdPrecompiles.B20_FACTORY.isB20(token), "is B20");
@@ -79,9 +79,9 @@ contract VaultB20Test is ClankerB20Harness {
             vm.skip(true);
             return;
         }
-        (address token, ClankerVault vault) = _deployWithVault();
+        (address token, BerylPadVault vault) = _deployWithVault();
 
-        vm.expectRevert(IClankerVault.AllocationNotUnlocked.selector);
+        vm.expectRevert(IBerylPadVault.AllocationNotUnlocked.selector);
         vault.claim(token);
     }
 }

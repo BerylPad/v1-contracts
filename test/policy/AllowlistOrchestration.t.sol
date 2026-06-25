@@ -15,9 +15,9 @@ import {LaunchSwapHarness} from "./LaunchSwapHarness.sol";
 /// trading need exactly {PoolManager, swapper} allowlisted. The fee the LP locker
 /// sweeps on the next swap is the PAIRED token (WETH, unpolicied), so it adds no
 /// allowlist members. (Sustained trading does require an orthogonal, NON-policy
-/// setup step — the LP locker must be an approved depositor of the ClankerFeeLocker
+/// setup step — the LP locker must be an approved depositor of the BerylPadFeeLocker
 /// — which the harness now wires in _deployApparatus; without it the 2nd swap
-/// reverts ClankerFeeLocker.Unauthorized(), unrelated to the allowlist.)
+/// reverts BerylPadFeeLocker.Unauthorized(), unrelated to the allowlist.)
 /// Base Sepolia fork.
 contract AllowlistOrchestrationTest is LaunchSwapHarness {
     address constant POLICY_ADMIN = address(0xB0);
@@ -77,7 +77,7 @@ contract AllowlistOrchestrationTest is LaunchSwapHarness {
     /// Sustained trading needs no extra allowlist members: with only
     /// {PoolManager, swapper} authorized, a SECOND same-direction swap also
     /// succeeds — the LP fee the locker sweeps in between is the paired token
-    /// (WETH, unpolicied). (Depends on the ClankerFeeLocker depositor wiring in
+    /// (WETH, unpolicied). (Depends on the BerylPadFeeLocker depositor wiring in
     /// _deployApparatus; that is a setup requirement, not an allowlist member.)
     function test_sustained_trading_same_minimal_set() public {
         if (!_v4Present()) {

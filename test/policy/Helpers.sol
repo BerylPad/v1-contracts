@@ -12,7 +12,7 @@ import {B20Constants} from "base-std/lib/B20Constants.sol";
 /// Shared policy harness for LP4. Wraps the singleton IPolicyRegistry precompile
 /// (createPolicy / updateAllowlist / updateBlocklist as the policy admin) and the
 /// per-token policy-scope flip (IB20.updatePolicy as the token DEFAULT_ADMIN). Kept
-/// standalone from ClankerB20Harness so the pure-mechanics LP4a tests need no
+/// standalone from BerylPadB20Harness so the pure-mechanics LP4a tests need no
 /// Uniswap; LP4b/LP4c inherit BOTH (diamond over forge-std Test).
 abstract contract PolicyHarness is Test {
     IPolicyRegistry constant REGISTRY = StdPrecompiles.POLICY_REGISTRY;

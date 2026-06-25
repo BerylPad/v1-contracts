@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {IClanker} from "../../src/interfaces/IClanker.sol";
-import {ClankerB20Harness} from "../ext/Helpers.sol";
+import {IBerylPad} from "../../src/interfaces/IBerylPad.sol";
+import {BerylPadB20Harness} from "../ext/Helpers.sol";
 import {PolicyHarness} from "./Helpers.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -16,25 +16,25 @@ import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.s
 import {IV4Router} from "@uniswap/v4-periphery/src/interfaces/IV4Router.sol";
 import {Actions} from "@uniswap/v4-periphery/src/libraries/Actions.sol";
 
-/// LP4b/LP4c shared harness: launch a vanilla B20 through the Clanker fork, then
+/// LP4b/LP4c shared harness: launch a vanilla B20 through the BerylPad fork, then
 /// perform a real post-launch v4 swap (WETH -> B20) via the UniversalRouter from
-/// an arbitrary trader address. Combines ClankerB20Harness (apparatus + config)
+/// an arbitrary trader address. Combines BerylPadB20Harness (apparatus + config)
 /// with PolicyHarness (registry + scope flips). The swap is the surface LP4
 /// gates with policy: the take leg moves B20 PoolManager -> trader, so the
 /// trader (receiver) and PoolManager (sender) face the transfer policies.
-abstract contract LaunchSwapHarness is ClankerB20Harness, PolicyHarness {
+abstract contract LaunchSwapHarness is BerylPadB20Harness, PolicyHarness {
     /// Deploy the full apparatus + a vanilla (no-policy) B20 with no extensions.
     function _launchVanilla(bytes32 salt, string memory name, string memory symbol)
         internal
         returns (Apparatus memory a, address token, PoolKey memory key)
     {
         a = _deployApparatus();
-        IClanker.ExtensionConfig[] memory none = new IClanker.ExtensionConfig[](0);
+        IBerylPad.ExtensionConfig[] memory none = new IBerylPad.ExtensionConfig[](0);
         token = a.factory.deployToken(_baseCfg(a, salt, name, symbol, none));
         key = _poolKeyFor(a, token);
     }
 
-    /// Reconstruct the pool's PoolKey (ClankerHookV2._initializePool): WETH < B20
+    /// Reconstruct the pool's PoolKey (BerylPadHookV2._initializePool): WETH < B20
     /// so currency0 = WETH, dynamic-fee flag, our tickSpacing + hook.
     function _poolKeyFor(Apparatus memory a, address token) internal pure returns (PoolKey memory) {
         (address c0, address c1) = WETH < token ? (WETH, token) : (token, WETH);
