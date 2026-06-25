@@ -9,6 +9,7 @@ viaIR = true
 evm_version = "cancun"
 optimizer = true
 optimizer_runs = 20_000
+base = true # Beryl fork: register B20/Policy/Activation precompiles (base-forge)
 
 
 [fmt]

@@ -1,3 +1,6 @@
+# Vendored deps — reconstructed via setup.sh (NOT committed; 175M)
+lib/
+
 # Compiler files
 cache/
 out/

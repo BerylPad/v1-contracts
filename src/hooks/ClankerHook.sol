@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {ClankerToken} from "../ClankerToken.sol";
+// NOTE (Beryl fork): the upstream `import {ClankerToken}` was a dead import — the
+// hook never references the concrete token type (it operates purely on
+// Currency/IERC20/IPoolManager). Removed so the B20-only tree compiles.
 
 import {IClanker} from "../interfaces/IClanker.sol";
 

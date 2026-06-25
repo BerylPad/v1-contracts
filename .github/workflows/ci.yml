@@ -1,0 +1,36 @@
+# DRAFT — wire the "Install base-forge" step before enabling this workflow.
+# These contracts need Base's Foundry build (base-forge) for the B20 / Policy /
+# Activation precompiles; stock Foundry cannot simulate them. Until the install
+# step below is filled in with the real base-forge installer, this CI will fail.
+name: contracts-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # TODO: replace with the official base-forge installer so it lands in
+      #       $HOME/.foundry/versions/base-v1.1.0 (matching setup.sh).
+      - name: Install base-forge
+        run: |
+          echo "TODO: install base-forge (Base's Foundry build)"
+          # e.g. curl -L <base-foundryup-url> | bash && base-foundryup --version v1.1.0
+          exit 1
+
+      - name: Reconstruct dependencies (lib/)
+        run: ./setup.sh
+
+      - name: Format check
+        run: PATH="$HOME/.foundry/versions/base-v1.1.0:$HOME/.foundry/bin:$PATH" base-forge fmt --check
+
+      - name: Build
+        run: PATH="$HOME/.foundry/versions/base-v1.1.0:$HOME/.foundry/bin:$PATH" base-forge build
+
+      - name: Test
+        run: PATH="$HOME/.foundry/versions/base-v1.1.0:$HOME/.foundry/bin:$PATH" base-forge test -vvv
