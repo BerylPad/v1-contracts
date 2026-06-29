@@ -35,6 +35,11 @@ interface IBerylPadHook {
     // note: is not emitted when a mev module expires
     event MevModuleDisabled(PoolId);
     event ClaimProtocolFees(address indexed token, uint256 amount);
+    // Emitted when the per-swap LP-fee sweep is skipped because the fee-path B20
+    // transfer reverted (policy/pause). The swap still settles; fees stay accrued
+    // in the position and are swept on a later swap once the path is unblocked.
+    // (prevents a TRANSFER-scoped policy/pause from bricking the pool.)
+    event LpLockerFeeClaimSkipped(PoolId poolId);
 
     // initialize a pool on the hook for a token
     function initializePool(

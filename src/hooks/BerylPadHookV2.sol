@@ -408,8 +408,17 @@ abstract contract BerylPadHookV2 is BaseHook, IBerylPadHookV2 {
             ? Currency.unwrap(poolKey.currency0)
             : Currency.unwrap(poolKey.currency1);
 
-        // trigger the fee claim
-        IBerylPadLpLocker(locker[poolKey.toId()]).collectRewardsWithoutUnlock(token);
+        // trigger the fee claim — isolated so a B20 policy/pause revert on the
+        // fee-path transfer cannot brick the swap. This mirrors the
+        // try/catch already used for _runPoolExtension: the fee claim is a
+        // non-critical side-effect, so on failure we skip it and let the swap
+        // settle. Skipped fees stay accrued in the position and are swept on a
+        // later swap once the policy/pause is corrected (no value is lost).
+        try IBerylPadLpLocker(locker[poolKey.toId()]).collectRewardsWithoutUnlock(token) {
+            // fees swept
+        } catch {
+            emit LpLockerFeeClaimSkipped(poolKey.toId());
+        }
     }
 
     function _hookFeeClaim(PoolKey calldata poolKey) internal {
